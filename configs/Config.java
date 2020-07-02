@@ -24,6 +24,7 @@ public class Config {
     @From(name = "httpServerPort")
     public static int httpServerPort;
 
+
     @From(name = "yoloServerUrl")
     public static String yoloServerUrl;
     @From(name = "yoloServerPort")
