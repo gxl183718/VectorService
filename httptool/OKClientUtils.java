@@ -271,10 +271,9 @@ public class OKClientUtils {
     /**
      * post 请求
      * @param url url
-     * @param json body
      */
-    public static String doPost(String url, String json) throws Exception {
-        Request request = new Request.Builder().url(url).post(RequestBody.create(json, MediaType.parse("application/octet-stream"))).build();
+    public static String doPost(String url, String value) throws Exception {
+        Request request = new Request.Builder().url(url).post(new FormBody.Builder().add("text", value).build()).build();
         Response response = client.newCall(request).execute();
 
         if (!response.isSuccessful()) {

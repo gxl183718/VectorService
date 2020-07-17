@@ -15,6 +15,9 @@ public class Config {
     public static String redisUrl;
     @From(name = "redisMasterName")
     public static String redisMasterName;
+    @From(name = "redisPassWD")
+    public static String redisPassWD;
+
 
     @From(name = "grpcPort")
     public static int grpcPort;
@@ -48,6 +51,8 @@ public class Config {
     public static String ocrUrl;
     @From(name = "keyWordsUrl")
     public static String keyWordsUrl;
+    @From(name = "engineTimeout")
+    public  static int engineTimeout;
 
     @From(name = "faceTags")
     public static Map<String, String> faceTags;
@@ -55,4 +60,6 @@ public class Config {
     @From(name = "typeTags")
     public static Map<String, String> typeTags;
 
+    @From(name = "logLevel")
+    public static int logLevel;
 }
