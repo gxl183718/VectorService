@@ -283,10 +283,10 @@ public class YoloHttpServer {
     private List<Map<String, String>> getKeyWords(String content) {
         List<Map<String, String>> list = new ArrayList<>();
         String rt = null;
-        Map<String, String> params = new HashMap<>();
-        params.put("text", content);
+//        Map<String, String> params = new HashMap<>();
+//        params.put("text", content);
         try {
-             rt = OKClientUtils.doPost(Config.keyWordsUrl, Json.toString(params));
+             rt = OKClientUtils.doPost(Config.keyWordsUrl, content);
         } catch (Exception e) {
             e.printStackTrace();
         }
