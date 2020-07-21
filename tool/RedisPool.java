@@ -1,5 +1,6 @@
 package iie.tool;
 
+import iie.configs.Config;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -45,8 +46,8 @@ public class RedisPool {
                             JedisPoolConfig c = new JedisPoolConfig();
                             Set<String> sentinels = new HashSet<>();
                             sentinels.addAll(Arrays.asList(url.substring(6).split(";")));
-                            jsp = new JedisSentinelPool(masterName, sentinels, c,
-                                    30 * 1000);
+                            jsp = new JedisSentinelPool(masterName, sentinels,c,
+                                    30 * 1000, Config.redisPassWD);
                             System.out.println("New sentinel pool @ " + masterName);
                         }
                         return jsp.getResource();

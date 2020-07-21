@@ -47,6 +47,8 @@ public class Config {
     public static String ocrUrl;
     @From(name = "keyWordsUrl")
     public static String keyWordsUrl;
+    @From(name = "engineTimeout")
+    public static int engineTimeout;
 
     @From(name = "faceTags")
     public static Map<String, String> faceTags;

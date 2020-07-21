@@ -8,6 +8,7 @@ import iie.grpc.LocateEntry;
 import iie.grpctool.GrpcClient;
 import iie.httptool.HttpRequest;
 import iie.httptool.OKClientUtils;
+import iie.tool.LogUtil;
 import iie.tool.Tag;
 import iie.tool.TagsManager;
 import iie.tool.TimeOutUtil;
@@ -85,7 +86,7 @@ public class YoloHttpServer {
                 String contentType = ctx.formParam("contentType");
                 String content = ctx.formParam("content");
                 Map<String, Object> result = new HashMap<>();
-                System.out.println(getTime() + " post request : contentType='" + contentType
+                LogUtil.logInfo(1, " post request : contentType='" + contentType
                 + "', content='" + content + "'.");
                 result.put("success", true);
                 result.put("message", "解析成功");
@@ -110,19 +111,18 @@ public class YoloHttpServer {
                         String key = Config.tmpUISet + "@" + md5;
                         clientAPI.put(key, contents);
                         url = Config.mamPre + key;
-                        System.out.println(new Date() + " 用户上传图片 ‘" + ctx.uploadedFile("file").getFilename()
+                        LogUtil.logInfo(2," 用户上传图片 ‘" + ctx.uploadedFile("file").getFilename()
                         + "’, url=" + url);
                     }else {
                         url = content;
                         md5 = url.split("@")[1];
-                        System.out.println(new Date() + " 系统内部图片 url=" + url);
+                        LogUtil.logInfo(2, " 系统内部图片 url=" + url);
                     }
-
                     //数据异步处理
                     long time0 = System.currentTimeMillis();
-                    CompletableFuture<String> f1 = TimeOutUtil.asyncProcess(new HttpTask(url, "ocr"), 5);
-                    CompletableFuture<LocateEntries> f2 = TimeOutUtil.asyncProcess(new GrpcTask(clientFace, url), 5);
-                    CompletableFuture<LocateEntries> f3 = TimeOutUtil.asyncProcess(new GrpcTask(clientYolo, url), 5);
+                    CompletableFuture<String> f1 = TimeOutUtil.asyncProcess(new HttpTask(url, "ocr"), Config.engineTimeout);
+                    CompletableFuture<LocateEntries> f2 = TimeOutUtil.asyncProcess(new GrpcTask(clientFace, url), Config.engineTimeout);
+                    CompletableFuture<LocateEntries> f3 = TimeOutUtil.asyncProcess(new GrpcTask(clientYolo, url), Config.engineTimeout);
                     while(f1.isDone() == false || f2.isDone() == false || f3.isDone() == false){
                         Thread.sleep(10);
                     }
@@ -136,18 +136,18 @@ public class YoloHttpServer {
                         list = getKeyWords(f1.get());
                         locate.setKeyWords(list);
                         long t2 = System.currentTimeMillis();
-                        System.out.println("ocr 内容关键词解析耗时：" + (t2 - t1) + " ms.");
+                        LogUtil.logInfo(2,"ocr 内容关键词解析耗时：" + (t2 - t1) + " ms.");
                     }
                     long time1 = System.currentTimeMillis();
 
-                    System.out.println(getTime() + "解析总耗时" + (time1-time0) +  "ms.");
+                    LogUtil.logInfo(1, "解析总耗时" + (time1-time0) +  "ms.");
 
                     List<iie.server.Locate.Position> positions = new ArrayList<>();
                     List<iie.server.Locate.Tag> tags = new ArrayList<>();
                     List<Map<String, String>> keyWords = new ArrayList<>();
                     //face
                     if (lesFace == null){
-                        System.out.println(getTime() + "face search timeout!");
+                        LogUtil.logInfo(1, "face search timeout!");
                     }else if (lesFace.getCode().equals("0")){
                         locate.setImgWidth(lesFace.getW());
                         locate.setImgHeight(lesFace.getH());
@@ -175,11 +175,11 @@ public class YoloHttpServer {
                             if (!"none".equals(locateEntry.getLabel())){
                                 ln --;
                                 String s = Config.faceTags.get(locateEntry.getLabel());
-                                System.out.println("....label...." + locateEntry.getLabel());
+                                LogUtil.logInfo(2,"label--" + locateEntry.getLabel());
                                 position.setLabel(s == null ? "" : s);
 //                                String s = Config.faceTags.get(locateEntry.getLabel());
 //                                position.setLabel(s);
-                                System.out.println(getTime() + " 人脸解析结果：" + s);
+                                LogUtil.logInfo(2, " 人脸解析结果：" + s);
                                 if (s != null && !s.equals("")){
                                     tag = new iie.server.Locate.Tag();
                                     tag.setContent("人脸-" + s);
@@ -193,7 +193,7 @@ public class YoloHttpServer {
                                     }
                                 }
                             }else{
-                                System.out.println(getTime() + " 人脸解析结果：没有标签。");
+                                LogUtil.logInfo(2, " 人脸解析结果：没有标签。");
                             }
                             positions.add(position);
                             locate.setPositions(positions);
@@ -204,7 +204,7 @@ public class YoloHttpServer {
                         locate.setTags(tags);
                     }
                     if (lesYolo == null){
-                        System.out.println(getTime() + "yolo search timeout!");
+                        LogUtil.logInfo(1,"yolo search timeout!");
                     }else if (lesYolo.getCode().equals("0")){
                         locate.setImgWidth(lesYolo.getW());
                         locate.setImgHeight(lesYolo.getH());
@@ -234,7 +234,7 @@ public class YoloHttpServer {
                             }
 
                             position.setLabel(lb + yn.get(lb).get());
-                            System.out.println(getTime() + " 实体解析结果：" + lb);
+                            LogUtil.logInfo(2, " 实体解析结果：" + lb);
                             position.setTypeLabel("实体");
                             positions.add(position);
                             locate.setPositions(positions);
@@ -248,10 +248,10 @@ public class YoloHttpServer {
                     if (locate.getImgHeight() == 0 && locate.getImgWidth() == 0){
                         InputStream is = HttpRequest.sendGet(url);
                         if (is == null)
-                            System.out.println("get url stream = null");
+                            LogUtil.logInfo(2,"get url stream = null");
                         else {
                             BufferedImage bs = ImageIO.read(is);
-                            System.out.println("image height: " + bs.getHeight());
+                            LogUtil.logInfo(2,"image height: " + bs.getHeight());
                             locate.setImgHeight(bs.getHeight());
                             locate.setImgWidth(bs.getWidth());
                         }
@@ -261,7 +261,7 @@ public class YoloHttpServer {
 //                    ctx.result(JSON.toJSONString(result));
                     result.put("data", locate);
                     ctx.json(result);
-                    System.out.println(getTime() + "请求总耗时: " + (System.currentTimeMillis() - start) + " ms.");
+                    LogUtil.logInfo(1,  "请求总耗时: " + (System.currentTimeMillis() - start) + " ms.");
                 }else {
                     //other type
                     result.put("message", "暂不支持的类型");
@@ -283,15 +283,17 @@ public class YoloHttpServer {
     private List<Map<String, String>> getKeyWords(String content) {
         List<Map<String, String>> list = new ArrayList<>();
         String rt = null;
-        Map<String, String> params = new HashMap<>();
-        params.put("text", content);
+//        Map<String, String> params = new HashMap<>();
+//        params.put("text", content);
         try {
-             rt = OKClientUtils.doPost(Config.keyWordsUrl, Json.toString(params));
+            rt = OKClientUtils.doPost(Config.keyWordsUrl, content);
+            if (rt != null){
+                list = JSON.parseObject(rt, new TypeReference<List<Map<String, String>>>() {});
+            }
         } catch (Exception e) {
+            LogUtil.logInfo(1, "rt--" + rt);
             e.printStackTrace();
         }
-        if (rt != null)
-            list = JSON.parseObject(rt, new TypeReference<List<Map<String, String>>>() {});
         return list;
     }
 
@@ -440,7 +442,7 @@ public class YoloHttpServer {
             long time1 = System.currentTimeMillis();
             LocateEntries les = grpcClient.getObjectsByUrl(url);
             long time2 = System.currentTimeMillis();
-            System.out.println(this.name + " 解析耗时：" + (time2 - time1));
+            LogUtil.logInfo(2, this.name + " 解析耗时：" + (time2 - time1));
             return les;
         }
     }
@@ -462,7 +464,7 @@ public class YoloHttpServer {
             long time1 = System.currentTimeMillis();
             String s = getOcrText(url);
             long time2 = System.currentTimeMillis();
-            System.out.println(name + " 耗时: " + (time2 - time1) + " ms.");
+            LogUtil.logInfo(2,name + " 耗时: " + (time2 - time1) + " ms.");
            return s;
         }
     }

@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import iie.grpc.*;
 import iie.grpc.VectorGrpc.VectorImplBase;
 import iie.grpctool.VectorClient;
+import iie.tool.LogUtil;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -78,7 +79,7 @@ public class VectorSearchServer {
         @Override
         public void getVectorByUrl(QueryByUrlEntry request, StreamObserver<ResultEntryHash> responseObserver) {
 //            super.getVectorByUrl(request, responseObserver);
-            System.out.println(getTime() + " grpc 请求: space='" + request.getSpace() +"',startTime=" +
+            LogUtil.logInfo(1," grpc 请求: space='" + request.getSpace() +"',startTime=" +
                     request.getStartTime() +",endTime=" +
                     request.getEndTime() +",url=" +
                     request.getImage().getImageUrl() + " position is '" +
@@ -104,11 +105,11 @@ public class VectorSearchServer {
                     } catch (IOException e) {
                         error = true;
                         i ++;
-                        System.out.println("请求wbyy服务异常：" + e.getMessage() + " , 重试 " + i + " times.");
+                        LogUtil.logInfo(1,"请求wbyy服务异常：" + e.getMessage() + " , 重试 " + i + " times.");
                     }
                 }while (i < 3 && error);
 
-                System.out.println(getTime() + " 文本语义耗时：" + (System.currentTimeMillis() - time1) + "ms.");
+                LogUtil.logInfo(1, " 文本语义耗时：" + (System.currentTimeMillis() - time1) + "ms.");
                 ResultEntryHash reh = ResultEntryHash.newBuilder().addResultEntries(
                         ResultEntry.newBuilder()
                                 .setStartTime(request.getStartTime())
@@ -125,9 +126,9 @@ public class VectorSearchServer {
                 ResultEntryHash reh = vectorClient.getVectors(request.getSpace(), request.getStartTime(), request.getEndTime(),
                         ur.getImageUrl(), ur.getX1(), ur.getY1(), ur.getX2(), ur.getY2(), ur.getX3(), ur.getY3(), ur.getX4(), ur.getY4());
                 if (reh.getResultEntriesList().size() != 0)
-                    System.out.println(getTime() + " grpc 查询耗时 :" + (System.currentTimeMillis() - start) + " ms, vector size = " + reh.getResultEntriesList().size());
+                    LogUtil.logInfo(1, " grpc 查询耗时 :" + (System.currentTimeMillis() - start) + " ms, vector size = " + reh.getResultEntriesList().size());
                 else {
-                    System.out.println(getTime() + " grpc 查询耗时 :" + (System.currentTimeMillis() - start) + " ms, no engine");
+                    LogUtil.logInfo(1," grpc 查询耗时 :" + (System.currentTimeMillis() - start) + " ms, no engine");
                 }
                 responseObserver.onNext(reh);
                 responseObserver.onCompleted();
